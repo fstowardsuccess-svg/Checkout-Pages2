@@ -1,11 +1,54 @@
 
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Now</title>
-    <!-- Meta Pixel Code -->
+    <title>FB Tracker</title>
+    <script>
+        // Your Facebook Pixel ID
+        const pixelId = "YOUR_PIXEL_ID";
+
+        // Example USD to PKR exchange rate
+        const USD_TO_PKR = 283.85; // You can update this if rates change
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        window.onload = function () {
+            const pid = getQueryParam("pid");
+            const pname = getQueryParam("pname");
+            const priceUSD = parseFloat(getQueryParam("price")); // USD price from URL
+            const qty = parseInt(getQueryParam("qty"));
+            const currency = getQueryParam("currency");
+            const redirect = decodeURIComponent(getQueryParam("redirect"));
+
+            // Convert USD to PKR if currency=USD
+            let pricePKR = priceUSD;
+            if (currency === "USD") {
+                pricePKR = Math.round(priceUSD * USD_TO_PKR * 100) / 100; // Round to 2 decimals
+            }
+
+            // FB Pixel purchase tracking
+            if (typeof fbq === "function") {
+                fbq('track', 'Purchase', {
+                    content_ids: [pid],
+                    content_name: pname,
+                    value: pricePKR,
+                    currency: "PKR",
+                    quantity: qty
+                });
+            }
+
+            // Redirect to JotForm with PKR price
+            const formUrl = `${redirect}?product_id=${encodeURIComponent(pid)}&product_name=${encodeURIComponent(pname)}&price=${pricePKR}&quantity=${qty}&currency=PKR`;
+            window.location.href = formUrl;
+        };
+    </script>
+</head>
+<body>
+    <p>Redirecting...</p>
+    <!-- Facebook Pixel Base Code -->
     <script>
         !function(f,b,e,v,n,t,s)
         {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
@@ -15,18 +58,8 @@
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', 'YOUR_PIXEL_ID'); // Replace with your actual Pixel ID
+        fbq('init', pixelId);
         fbq('track', 'PageView');
     </script>
-    <noscript>
-        <img height="1" width="1" style="display:none"
-            src="https://www.facebook.com/tr?id=YOUR_PIXEL_ID&ev=PageView&noscript=1"/>
-    </noscript>
-    <!-- End Meta Pixel Code -->
-</head>
-<body>
-    <h1>Order Form</h1>
-    <p> <iframe id="JotFormIFrame-252241380981052" title="JO Earth" onload="window.parent.scrollTo(0,0)" allowtransparency="true" allow="geolocation; microphone; camera; fullscreen; payment" src="https://form.jotform.com/252241380981052" frameborder="0" style="min-width:100%;max-width:100%;height:539px;border:none;" scrolling="no" > </iframe>  </p>
 </body>
-    <script src='https://cdn.jotfor.ms/s/umd/latest/for-form-embed-handler.js'></script> <script>window.jotformEmbedHandler("iframe[id='JotFormIFrame-252241380981052']", "https://form.jotform.com/")</script>
 </html>
